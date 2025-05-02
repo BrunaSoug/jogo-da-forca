@@ -1,6 +1,8 @@
 package br.edu.iff.jogoforca.dominio.boneco.imagem;
 
-public class BonecoImagem {
+import br.edu.iff.jogoforca.dominio.boneco.Boneco;
+
+public class BonecoImagem implements Boneco {
     private static BonecoImagem soleInstance;
     private BonecoImagem() {}
 
@@ -11,5 +13,6 @@ public class BonecoImagem {
         return soleInstance;
     }
     
+    @Override
     public void exibir(Object contexto, int partes) {}
 }
