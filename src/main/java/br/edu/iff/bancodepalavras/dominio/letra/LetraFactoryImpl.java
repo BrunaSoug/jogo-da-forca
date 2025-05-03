@@ -13,7 +13,7 @@ public abstract class LetraFactoryImpl implements LetraFactory {
 	@Override
 	public final Letra getLetra(char codigo) {
 		if (!(codigo >= 'a' && codigo <= 'z')) {
-			throw new RuntimeException("O caractere não é válido");
+			throw new RuntimeException("O caractere não é válido!");
 		}
 		int posicaoArmazenada = codigo - 'a';
 		Letra letraDesejada = this.pool[posicaoArmazenada];
@@ -27,11 +27,9 @@ public abstract class LetraFactoryImpl implements LetraFactory {
 	@Override
 	public final Letra getLetraEncoberta() {
 		if (encoberta == null) {
-			this.encoberta = criarLetra('*');
+			this.encoberta = criarLetra('?');
 		}
 		return this.encoberta;
 	}
-
 	protected abstract Letra criarLetra(char codigo);
-
 }
