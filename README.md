@@ -69,7 +69,7 @@ Implementado em **Java**, com os seguintes conceitos e padrões:
 
 ## 👩‍💻 Integrantes
 
-> Bruna Souza [@BrunaSoug] 
+> Bruna Souza [#@BrunaSoug] 
 ---
 
 ## 📎 Licença
