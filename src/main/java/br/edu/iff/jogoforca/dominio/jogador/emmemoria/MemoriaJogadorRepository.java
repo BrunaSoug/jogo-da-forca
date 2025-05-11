@@ -1,7 +1,9 @@
 package br.edu.iff.jogoforca.dominio.jogador.emmemoria;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import br.edu.iff.jogoforca.dominio.jogador.Jogador;
 import br.edu.iff.jogoforca.dominio.jogador.JogadorRepository;
@@ -9,6 +11,7 @@ import br.edu.iff.repository.RepositoryException;
 
 public class MemoriaJogadorRepository implements JogadorRepository {
     private List<Jogador> pool;
+     private Map<Long, Jogador> jogadores = new HashMap<>();
 	private static MemoriaJogadorRepository soleInstance;
 
     private MemoriaJogadorRepository() {
@@ -95,4 +98,9 @@ public class MemoriaJogadorRepository implements JogadorRepository {
 	public long getProximoId() {
 		return this.pool.size() + 1;
 	}
+
+    @Override
+    public List<Jogador> todos() throws RepositoryException {
+        return new ArrayList<>(jogadores.values());
+    }
 }

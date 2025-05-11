@@ -1,5 +1,9 @@
 package br.edu.iff.jogoforca.dominio.rodada;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import br.edu.iff.bancodepalavras.dominio.letra.Letra;
 import br.edu.iff.bancodepalavras.dominio.palavra.Palavra;
 import br.edu.iff.bancodepalavras.dominio.tema.Tema;
@@ -9,243 +13,277 @@ import br.edu.iff.jogoforca.dominio.boneco.BonecoFactory;
 import br.edu.iff.jogoforca.dominio.jogador.Jogador;
 
 public class Rodada extends ObjetoDominioImpl {
-    private static int maxPalavras = 3;
-    private static int maxErros = 10;
-    private static int pontosQuandoDescobreTodasAsPalavras = 100;
-    private static int pontosPorLetraEncoberta = 15;
-    private static BonecoFactory bonecoFactory;
-    private Item[] itens;
-    private Letra[] erradas;
-    private Jogador jogador;
-    private boolean jaArriscou = false;
-    private Boneco boneco;
 
-    public static int getMaxPalavras() { return maxPalavras; }
-    public static void setMaxPalavras(int max) { maxPalavras = max; }
-    
-    public static int getMaxErros() { return maxErros; }
-    public static void setMaxErros(int max) { maxErros = max; }
-    
-    public static int getPontosQuandoDescobreTodasAsPalavras() { return pontosQuandoDescobreTodasAsPalavras; }
-    public static void setPontosQuandoDescobreTodasAsPalavras(int pontos) { pontosQuandoDescobreTodasAsPalavras = pontos; }
-    
-    public static int getPontosPorLetraEncoberta() { return pontosPorLetraEncoberta; }
-    public static void setPontosPorLetraEncoberta(int pontos) { pontosPorLetraEncoberta = pontos; }
-    
-    public static void setBonecoFactory(BonecoFactory factory) { bonecoFactory = factory; }
-    public static BonecoFactory getBonecoFactory() { 
-        if (bonecoFactory == null) {
-            throw new IllegalStateException("BonecoFactory não foi configurado");
-        }
-        return bonecoFactory; 
-    }
+	private static int maxPalavras = 3;
+	private static int maxErros = 10;
+	private static int pontosQuandoDescobreTodasAsPalavras = 100;
+	private static int pontosPorLetraEncoberta = 15;
 
-    private Rodada(long id, Palavra[] palavras, Jogador jogador) {
-        super(id);
-        if (bonecoFactory == null) {
-            throw new IllegalStateException("Ops... BonecoFactory deve ser configurado antes de criar uma Rodada!");
-        }
-        
-        this.jogador = jogador;
-        this.itens = new Item[palavras.length];
-        for (int i = 0; i < palavras.length; i++) {
-            this.itens[i] = Item.criar(i, palavras[i]);
-        }
-        this.erradas = new Letra[0];
-        this.boneco = bonecoFactory.getBoneco();
-        
-        validarMesmoTema(palavras);
-    }
+	private Jogador jogador;
+	private static BonecoFactory bonecoFactory;
+	private Boneco boneco;
+	private Item[] itens;
+	private List<Letra> letrasErradas;
 
-    private Rodada(long id, Item[] itens, Letra[] erradas, Jogador jogador) {
-        super(id);
-        this.itens = itens;
-        this.erradas = erradas;
-        this.jogador = jogador;
-        this.boneco = bonecoFactory.getBoneco();
-    }
+	public static int getMaxPalavras() {
+		return maxPalavras;
+	}
 
-    public static Rodada criar(long id, Palavra[] palavras, Jogador jogador) {
-        return new Rodada(id, palavras, jogador);
-    }
+	public static void setMaxPalavras(int maxPalavras) {
+		Rodada.maxPalavras = maxPalavras;
+	}
 
-    public static Rodada reconstituir(long id, Item[] itens, Letra[] erradas, Jogador jogador) {
-        return new Rodada(id, itens, erradas, jogador);
-    }
+	public static int getMaxErros() {
+		return maxErros;
+	}
 
-    public Jogador getJogador() { return jogador; }
-    public Tema getTema() { return itens.length > 0 ? itens[0].getPalavra().getTema() : null; }
-    public Palavra[] getPalavras() {
-        Palavra[] palavras = new Palavra[itens.length];
-        for (int i = 0; i < itens.length; i++) {
-            palavras[i] = itens[i].getPalavra();
-        }
-        return palavras;
-    }
-    public int getNumPalavras() { return itens.length; }
+	public static void setMaxErros(int maxErros) {
+		Rodada.maxErros = maxErros;
+	}
 
-    public void tentar(char codigo) {
-        if (encerrou()) return;
-        
-        boolean acertou = false;
-        for (Item item : itens) {
-            if (item.tentar(codigo)) {
-                acertou = true;
-            }
-        }
-        
-        if (!acertou) {
-            Letra letraErrada = getPalavras()[0].getLetraFactory().getLetra(codigo);
-            adicionarLetraErrada(letraErrada);
-        }
-        
-        verificarFimRodada();
-    }
+	public static int getPontosQuandoDescobreTodasAsPalavras() {
+		return pontosQuandoDescobreTodasAsPalavras;
+	}
 
-    public void arriscar(String[] palavras) {
-        if (encerrou() || jaArriscou) return;
-        
-        jaArriscou = true;
-        boolean acertouTodas = true;
-        
-        for (int i = 0; i < itens.length; i++) {
-            itens[i].arriscar(palavras[i]);
-            if (!itens[i].acertou()) {
-                acertouTodas = false;
-            }
-        }
-        
-        if (acertouTodas) {
-            for (Item item : itens) {
-                for (int i = 0; i < item.getPalavra().getTamanho(); i++) {
-                    item.tentar(item.getPalavra().getLetra(i).getCodigo());
-                }
-            }
-        }
-        
-        verificarFimRodada();
-    }
+	public static void setPontosQuandoDescobreTodasAsPalavras(int pontosQuandoDescobreTodasAsPalavras) {
+		Rodada.pontosQuandoDescobreTodasAsPalavras = pontosQuandoDescobreTodasAsPalavras;
+	}
 
- 
-    public void exibirItens(Object contexto) {
-        for (Item item : itens) {
-            item.exibir(contexto);
-        }
-    }
+	public static int getPontosPorLetraEncoberta() {
+		return pontosPorLetraEncoberta;
+	}
 
-    public void exibirBoneco(Object contexto) {
-        boneco.exibir(contexto, getQuantidadeErros());
-    }
+	public static void setPontosPorLetraEncoberta(int pontosPorLetraEncoberta) {
+		Rodada.pontosPorLetraEncoberta = pontosPorLetraEncoberta;
+	}
 
-    public void exibirPalavras(Object contexto) {
-        for (Palavra palavra : getPalavras()) {
-            palavra.exibir(contexto);
-        }
-    }
+	public static void setBonecoFactory(BonecoFactory bonecoFactory) {
+		Rodada.bonecoFactory = bonecoFactory;
+	}
 
-    public void exibirLetrasErradas(Object contexto) {
-        for (Letra letra : erradas) {
-            letra.exibir(contexto);
-        }
-    }
+	public static BonecoFactory getBonecoFactory() {
+		return bonecoFactory;
+	}
 
-    // Métodos de consulta
-    public Letra[] getTentativas() {
-        Letra[] tentativas = new Letra[getQuantidadeAcertos() + getQuantidadeErros()];
-        System.arraycopy(getCertas(), 0, tentativas, 0, getQuantidadeAcertos());
-        System.arraycopy(erradas, 0, tentativas, getQuantidadeAcertos(), getQuantidadeErros());
-        return tentativas;
-    }
+	public static Rodada criar(long id, Palavra[] palavras, Jogador jogador) {
+		if (bonecoFactory == null) {
+			throw new RuntimeException("Deve inicializar o bonecoFactory antes");
+		}
+		return new Rodada(id, palavras, jogador);
+	}
 
-    public Letra[] getCertas() {
-        int totalCertas = getQuantidadeAcertos();
-        Letra[] certas = new Letra[totalCertas];
-        int index = 0;
-        for (Item item : itens) {
-            for (Letra letra : item.getLetrasDescobertas()) {
-                certas[index++] = letra;
-            }
-        }
-        return certas;
-    }
+	public static Rodada reconstruir(long id, Item[] itens, Letra[] erradas, Jogador jogador) {
+		if (bonecoFactory == null) {
+			throw new RuntimeException("Deve inicializar o bonecoFactory antes");
+		}
+		return new Rodada(id, itens, erradas, jogador);
+	}
 
-    public Letra[] getErradas() { return erradas; }
+	private Rodada(long id, Palavra[] palavras, Jogador jogador) {
+		super(id);
+		this.itens = new Item[palavras.length];
+		for (int posicaoAtual = 0; posicaoAtual < palavras.length; posicaoAtual++) {
+			this.itens[posicaoAtual] = Item.criar(posicaoAtual, palavras[posicaoAtual]);
+		}
+		Tema temaTeste = this.itens[0].getPalavra().getTema();
+		for (Item item : this.itens) {
+			if (item.getPalavra().getTema() != temaTeste) {
+				throw new RuntimeException("Todas as palavras devem ter o mesmo tema");
+			}
+		}
+		this.jogador = jogador;
+		this.letrasErradas = new ArrayList<Letra>();
+		this.boneco = bonecoFactory.getBoneco();
+	}
 
- 
-    public int calcularPontos() {
-        if (descobriu()) {
-            int pontos = pontosQuandoDescobreTodasAsPalavras;
-            pontos += contarLetrasEncobertas() * pontosPorLetraEncoberta;
-            return pontos;
-        }
-        return 0;
-    }
+	private Rodada(long id, Item[] itens, Letra[] erradas, Jogador jogador) {
+		super(id);
+		this.itens = itens;
+		Tema temaTeste = this.itens[0].getPalavra().getTema();
+		for (Item item : this.itens) {
+			if (item.getPalavra().getTema() != temaTeste) {
+				throw new RuntimeException("Todas as palavras devem ter o mesmo tema");
+			}
+		}
+		this.letrasErradas = Arrays.asList(erradas);
+		this.jogador = jogador;
+		this.boneco = bonecoFactory.getBoneco();
+	}
 
-    public boolean encerrou() {
-        return jaArriscou || descobriu() || getQuantidadeErros() >= maxErros;
-    }
+	public Jogador getJogador() {
+		return this.jogador;
+	}
 
-    public boolean descobriu() {
-        for (Item item : itens) {
-            if (!item.descobriu()) {
-                return false;
-            }
-        }
-        return true;
-    }
+	public Tema getTema() {
+		if (this.getNumPalavras() == 0) {
+			throw new RuntimeException("Deve ter pelo menos um item");
+		}
+		return this.itens[0].getPalavra().getTema();
+	}
 
-    public boolean arriscou() { return jaArriscou; }
+	public Palavra[] getPalavra() {
+		Palavra[] palavras = new Palavra[this.getNumPalavras()];
+		for (int palavraAtual = 0; palavraAtual < this.getNumPalavras(); palavraAtual++) {
+			palavras[palavraAtual] = this.itens[palavraAtual].getPalavra();
+		}
+		return palavras;
+	}
 
-    public boolean atingiuMaxErros() {
-        return getQuantidadeErros() >= maxErros;
-    }
+	public int getNumPalavras() {
+		return this.itens.length;
+	}
 
-    public int getQuantidadeTentativasRestantes() {
-        return maxErros - getQuantidadeErros();
-    }
+	public void tentar(char codigo) {
+		if (this.encerrou()) {
+			throw new RuntimeException("Não é possível fazer uma tentativa após o encerramento do jogo.");
+		}
 
-    public int getQuantidadeErros() { return erradas.length; }
+		if (this.getNumPalavras() == 0) {
+			throw new RuntimeException("Deve haver pelo menos uma palavra disponível para tentativa.");
+		}
 
-    public int getQuantidadeAcertos() {
-        int acertos = 0;
-        for (Item item : itens) {
-            acertos += item.getLetrasDescobertas().length;
-        }
-        return acertos;
-    }
+		boolean encontrou = false;
+		for (Item item : this.itens) {
+			if (item.tentar(codigo) && !encontrou) {
+				encontrou = true;
+			}
+		}
 
-    public int getQuantidadeTentativas() {
-        return getQuantidadeAcertos() + getQuantidadeErros();
-    }
+		if (!encontrou) {
+			this.letrasErradas.add(this.itens[0].getPalavra().getLetraFactory().getLetra(codigo));
+		}
 
-    private void adicionarLetraErrada(Letra letra) {
-        Letra[] novasErradas = new Letra[erradas.length + 1];
-        System.arraycopy(erradas, 0, novasErradas, 0, erradas.length);
-        novasErradas[erradas.length] = letra;
-        erradas = novasErradas;
-    }
+		if (this.encerrou()) {
+			this.jogador.setPontuacao(this.jogador.getPontuacao() + this.calcularPontos());
+		}
+	}
 
-    private int contarLetrasEncobertas() {
-        int count = 0;
-        for (Item item : itens) {
-            count += item.getLetrasEncobertas().length;
-        }
-        return count;
-    }
+	public void arriscar(String[] palavras) {
+		if (this.encerrou()) {
+			throw new RuntimeException("Não é possível tentar após o encerramento do jogo.");
+		}
 
-    private void validarMesmoTema(Palavra[] palavras) {
-        if (palavras.length == 0) return;
-        Tema tema = palavras[0].getTema();
-        for (Palavra palavra : palavras) {
-            if (!palavra.getTema().equals(tema)) {
-                throw new IllegalArgumentException("Todas as palavras devem ser do mesmo tema");
-            }
-        }
-    }
+		for (int palavraAtual = 0; palavraAtual < this.getNumPalavras(); palavraAtual++) {
+			this.itens[palavraAtual].arriscar(palavras[palavraAtual]);
+		}
 
-    private void verificarFimRodada() {
-        if (encerrou()) {
-            jogador.atualizarPontuacao(calcularPontos());
-        }
-    }
+		if (this.encerrou()) {
+			this.jogador.setPontuacao(this.jogador.getPontuacao() + this.calcularPontos());
+		}
+	}
+
+	public void exibirItens(Object contexto) {
+		for (Item item : this.itens) {
+			item.exibir(contexto);
+			System.out.println();
+		}
+	}
+
+	public void exibirBoneco(Object contexto) {
+		this.boneco.exibir(contexto, this.letrasErradas.size());
+	}
+
+	public void exibirPalavras(Object contexto) {
+		for (Item item : this.itens) {
+			item.getPalavra().exibir(contexto);
+			System.out.println();
+		}
+	}
+
+	public void exibirLetrasErradas(Object contexto) {
+		StringBuilder letrasErradas = new StringBuilder();
+		for (Letra letra : this.letrasErradas) {
+			letrasErradas.append(letra.toString()).append(", ");
+		}
+
+		if (letrasErradas.length() > 1) {
+			letrasErradas.deleteCharAt(letrasErradas.length() - 2);
+		}
+
+		System.out.println(letrasErradas);
+	}
+
+	public Letra[] getTentativas() {
+		Letra[] tentativas = new Letra[this.getCertas().length + this.getErradas().length];
+		int letraAtual = 0;
+
+		for (; letraAtual < this.getCertas().length; letraAtual++) {
+			tentativas[letraAtual] = this.getCertas()[letraAtual];
+		}
+
+		for (; letraAtual < tentativas.length; letraAtual++) {
+			tentativas[letraAtual] = this.getErradas()[letraAtual - this.getCertas().length];
+		}
+
+		return tentativas;
+	}
+
+	public Letra[] getCertas() {
+		ArrayList<Letra> acertos = new ArrayList<Letra>();
+		for (Item item : this.itens) {
+			for (Letra letra : item.getLetrasDescobertas()) {
+				if (!acertos.contains(letra)) {
+					acertos.add(letra);
+				}
+			}
+		}
+		return acertos.toArray(new Letra[acertos.size()]);
+	}
+
+	public Letra[] getErradas() {
+		return this.letrasErradas.toArray(new Letra[this.letrasErradas.size()]);
+	}
+
+	public int calcularPontos() {
+		if (this.descobriu()) {
+			int pontosTotaisPorLetrasEncobertas = 0;
+
+			for (Item item : this.itens) {
+				pontosTotaisPorLetrasEncobertas += item.calcularPontosLetrasEncobertas(pontosPorLetraEncoberta);
+			}
+
+			return pontosQuandoDescobreTodasAsPalavras + pontosTotaisPorLetrasEncobertas;
+		} else {
+			return 0;
+		}
+	}
+
+	public boolean encerrou() {
+		return this.arriscou() || this.descobriu() || (this.getQtdeTentativasRestantes() == 0);
+	}
+
+	public boolean descobriu() {
+		for (Item item : this.itens) {
+			if (!item.descobriu()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean arriscou() {
+		for (Item item : this.itens) {
+			if (!item.arriscou()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public int getQtdeTentativasRestantes() {
+		return maxErros - this.getQtdeErros();
+	}
+
+	public int getQtdeErros() {
+		return this.getErradas().length;
+	}
+
+	public int getQtdeAcertos() {
+		return this.getCertas().length;
+	}
+
+	public int getQtdeTentativas() {
+		return this.getQtdeAcertos() + this.getQtdeErros();
+	}
+
 }

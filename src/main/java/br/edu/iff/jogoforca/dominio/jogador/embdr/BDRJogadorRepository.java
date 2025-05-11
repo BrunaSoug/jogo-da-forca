@@ -1,5 +1,7 @@
 package br.edu.iff.jogoforca.dominio.jogador.embdr;
 
+import java.util.List;
+
 import br.edu.iff.jogoforca.dominio.jogador.Jogador;
 import br.edu.iff.jogoforca.dominio.jogador.JogadorRepository;
 import br.edu.iff.repository.RepositoryException;
@@ -48,5 +50,10 @@ public class BDRJogadorRepository implements JogadorRepository {
 	public void remover(Jogador jogador) throws RepositoryException {
 
 	}
+
+    @Override
+    public List<Jogador> todos() throws RepositoryException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }
